@@ -1,0 +1,79 @@
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-header p-3">
+        <h6 class="text-uppercase text-muted mb-0">Menu Principal</h6>
+    </div>
+    
+    <ul class="nav flex-column">
+        <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" 
+               href="{% url 'dividas:dashboard' %}">
+                <i class="bi bi-house-door"></i> Dashboard
+            </a>
+        </li>
+        
+        {% if is_empresa_user %}
+        <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'cadastrar_cliente' %}active{% endif %}" 
+               href="{% url 'dividas:cadastrar_cliente' %}">
+                <i class="bi bi-person-plus"></i> Cadastrar Cliente
+            </a>
+        </li>
+        {% endif %}
+        
+        <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'lista_clientes' %}active{% endif %}" 
+               href="{% url 'dividas:lista_clientes' %}">
+                <i class="bi bi-search"></i> Consultar Clientes
+            </a>
+        </li>
+        
+        {% if is_empresa_user %}
+        <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_estatisticas' %}active{% endif %}" 
+               href="{% url 'dividas:dashboard_estatisticas' %}">
+                <i class="bi bi-bar-chart"></i> Estatísticas
+            </a>
+        </li>
+        {% endif %}
+        
+        <li class="nav-item mt-4">
+            <div class="sidebar-header p-3">
+                <h6 class="text-uppercase text-muted mb-0">Empresa</h6>
+            </div>
+        </li>
+        
+        <li class="nav-item">
+            <span class="nav-link">
+                <i class="bi bi-building"></i>
+                <div>
+                    <small class="text-muted">Empresa Atual:</small><br>
+                    <strong>
+                        {% if is_empresa_user %}
+                            {{ empresa.nome }}
+                        {% else %}
+                            Consultor
+                        {% endif %}
+                    </strong>
+                </div>
+            </span>
+        </li>
+        
+        {% if is_empresa_user %}
+        <li class="nav-item">
+            <span class="nav-link">
+                <i class="bi bi-person-badge"></i>
+                <div>
+                    <small class="text-muted">Usuário:</small><br>
+                    <strong>{{ user.get_full_name|default:user.username }}</strong>
+                </div>
+            </span>
+        </li>
+        {% endif %}
+    </ul>
+    
+    <div class="sidebar-footer p-3 mt-auto">
+        <div class="small text-muted">
+            <i class="bi bi-shield-check"></i> Sistema Seguro
+        </div>
+    </div>
+</aside>

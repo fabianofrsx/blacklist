@@ -1,0 +1,453 @@
+{% extends 'dividas/base.html' %}
+{% load filters %}
+
+{% block title %}Consultar Clientes - Blacklist{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filters-card {
+        margin-bottom: 20px;
+    }
+
+    .filter-group {
+        margin-bottom: 15px;
+    }
+
+    .client-avatar {
+        width: 40px;
+        height: 40px;
+        background-color: var(--primary-color);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        margin-right: 10px;
+    }
+
+    .client-info h6 {
+        margin-bottom: 2px;
+    }
+
+    .client-info small {
+        color: var(--text-muted);
+    }
+
+    .action-buttons .btn {
+        margin: 2px;
+    }
+
+    .status-badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-2">
+                <i class="bi bi-search me-2"></i> Consultar Clientes
+            </h1>
+            <p class="text-muted">
+                {% if is_empresa_user %}
+                Consulte clientes com dívidas.
+                {% if search_query %}
+                <span class="text-warning">Mostrando resultados de todas as empresas para a busca.</span>
+                {% else %}
+                Mostrando clientes com dívidas na empresa <strong>{{ empresa.nome }}</strong>.
+                {% endif %}
+                {% else %}
+                Consulte clientes de todas as empresas.
+                {% endif %}
+            </p>
+        </div>
+        <div class="col-auto">
+            {% if is_empresa_user %}
+            <a href="{% url 'dividas:cadastrar_cliente' %}" class="btn btn-primary">
+                <i class="bi bi-person-plus me-1"></i> Novo Cliente
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Statistics (for empresa users) -->
+    {% if is_empresa_user and estatisticas %}
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-dark">
+                <div class="card-body py-3">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-people fs-3 text-primary"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">Clientes com Dívidas</h6>
+                            <h4 class="mb-0">{{ estatisticas.total_dividas }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-dark">
+                <div class="card-body py-3">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-exclamation-triangle fs-3 text-danger"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">Dívidas Ativas</h6>
+                            <h4 class="mb-0">{{ estatisticas.dividas_ativas }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-dark">
+                <div class="card-body py-3">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-check-circle fs-3 text-success"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">Dívidas Pagas</h6>
+                            <h4 class="mb-0">{{ estatisticas.dividas_pagas }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-dark">
+                <div class="card-body py-3">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-cash-coin fs-3 text-warning"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">Valor Total</h6>
+                            <h4 class="mb-0">R$ {{ estatisticas.valor_total|floatformat:2 }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Search and Filters -->
+    <div class="card filters-card">
+        <div class="card-body">
+            <form method="get" action="{% url 'dividas:lista_clientes' %}" class="row g-3">
+                <div class="col-md-6">
+                    <div class="search-box">
+                        <i class="bi bi-search"></i>
+                        <input type="text" class="form-control" name="search" placeholder="Buscar por nome ou CPF..."
+                            value="{{ search_query }}">
+                    </div>
+                </div>
+
+                {% if not is_empresa_user %}
+                <div class="col-md-3">
+                    <select class="form-select" name="empresa">
+                        <option value="">Todas as empresas</option>
+                        {% for emp in empresas %}
+                        <option value="{{ emp.id }}" {% if empresa_filter_int == emp.id %}selected{% endif %}>
+                            {{ emp.nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search me-1"></i> Buscar
+                    </button>
+                </div>
+
+                {% if search_query or empresa_filter %}
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            Filtros aplicados:
+                            {% if search_query %}<span class="badge bg-info">{{ search_query }}</span>{% endif %}
+                            {% if empresa_filter and not is_empresa_user %}
+                            <span class="badge bg-info ms-1">
+                                Empresa: {{ empresas|get_item:empresa_filter }}
+                            </span>
+                            {% endif %}
+                        </small>
+                        <a href="{% url 'dividas:lista_clientes' %}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-x-circle me-1"></i> Limpar Filtros
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <i class="bi bi-people me-2"></i> Resultados
+                <span class="badge bg-secondary ms-2">{{ clientes.count }} cliente(s)</span>
+            </div>
+            <div class="dropdown">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                    data-bs-toggle="dropdown">
+                    <i class="bi bi-download me-1"></i> Exportar
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#"><i class="bi bi-filetype-pdf me-2"></i> PDF</a></li>
+                    <li><a class="dropdown-item" href="#"><i class="bi bi-filetype-csv me-2"></i> CSV</a></li>
+                    <li><a class="dropdown-item" href="#"><i class="bi bi-filetype-xlsx me-2"></i> Excel</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if clientes %}
+            <div class="table-responsive">
+                <table class="table table-hover" id="clientesTable">
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>CPF</th>
+                            <th>Data Nasc.</th>
+                            <th>Dívidas</th>
+                            <th>Status</th>
+                            <th>Empresas</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cliente in clientes %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="client-avatar">
+                                        {{ cliente.nome_completo|first|upper }}
+                                    </div>
+                                    <div class="client-info">
+                                        <h6 class="mb-0">{{ cliente.nome_completo }}</h6>
+                                        <small>{{ cliente.email|default:"Sem e-mail" }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ cliente.cpf }}</td>
+                            <td>
+                                {% if cliente.data_nascimento %}
+                                {{ cliente.data_nascimento|date:"d/m/Y" }}
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% with dividas_cliente=cliente.dividas.all %}
+                                {% if is_empresa_user %}
+                                {% with divida_empresa=dividas_cliente|first %}
+                                {% if divida_empresa %}
+                                <div>
+                                    <strong>R$ {{ divida_empresa.valor_atual|floatformat:2 }}</strong>
+                                    <div class="small text-muted">
+                                        Vence: {{ divida_empresa.data_vencimento|date:"d/m/Y" }}
+                                    </div>
+                                </div>
+                                {% else %}
+                                <span class="text-muted">Nenhuma dívida</span>
+                                {% endif %}
+                                {% endwith %}
+                                {% else %}
+                                <div>
+                                    <strong>{{ dividas_cliente.count }} dívida(s)</strong>
+                                    <div class="small text-muted">
+                                        Total: R$ {{ dividas_cliente|sum_valor_atual|floatformat:2 }}
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% endwith %}
+                            </td>
+                            <td>
+                                {% with dividas_cliente=cliente.dividas.all %}
+                                {% if is_empresa_user %}
+                                {% with divida_empresa=dividas_cliente|first %}
+                                {% if divida_empresa %}
+                                <span class="status-badge badge-status-{{ divida_empresa.status|lower }}">
+                                    {{ divida_empresa.get_status_display }}
+                                </span>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                                {% endwith %}
+                                {% else %}
+                                <div class="small">
+                                    {% for status, count in dividas_cliente|group_by_status %}
+                                    <span class="badge bg-secondary me-1">{{ status }}: {{ count }}</span>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                {% endwith %}
+                            </td>
+                            <td>
+                                {% if not is_empresa_user %}
+                                {% with empresas_cliente=cliente.dividas.all|map:"empresa"|unique %}
+                                <div class="small">
+                                    {% for emp in empresas_cliente %}
+                                    <span class="badge bg-dark me-1">{{ emp.nome }}</span>
+                                    {% endfor %}
+                                </div>
+                                {% endwith %}
+                                {% else %}
+                                <!-- Para usuário da empresa, mostra a empresa da dívida principal -->
+                                {% load cliente_tags %}
+                                {% empresa_divida_principal cliente empresa as empresa_display %}
+                                <span
+                                    class="badge {% if empresa_display.id == empresa.id %}bg-primary{% else %}bg-warning text-dark{% endif %}">
+                                    {{ empresa_display.nome }}
+                                    {% if empresa_display.id != empresa.id %}
+                                    <i class="bi bi-exclamation-triangle ms-1" data-bs-toggle="tooltip"
+                                        title="Dívida em outra empresa"></i>
+                                    {% endif %}
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="{% url 'dividas:detalhes_cliente' cliente.id %}"
+                                        class="btn btn-sm btn-outline-info" data-bs-toggle="tooltip"
+                                        title="Ver detalhes">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+
+                                    {% if is_empresa_user %}
+                                    {% with divida_empresa=cliente.dividas.all|first %}
+                                    {% if divida_empresa and divida_empresa.status == 'ATIVA' %}
+                                    <a href="{% url 'dividas:baixar_divida' divida_empresa.id %}"
+                                        class="btn btn-sm btn-outline-success" data-bs-toggle="tooltip"
+                                        title="Baixar dívida">
+                                        <i class="bi bi-check-circle"></i>
+                                    </a>
+                                    {% endif %}
+                                    {% endwith %}
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Paginação" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link"
+                            href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if empresa_filter %}&empresa={{ empresa_filter }}{% endif %}">
+                            <i class="bi bi-chevron-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link"
+                            href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if empresa_filter %}&empresa={{ empresa_filter }}{% endif %}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <li class="page-item">
+                        <a class="page-link"
+                            href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if empresa_filter %}&empresa={{ empresa_filter }}{% endif %}">{{
+                            num }}</a>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link"
+                                href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if empresa_filter %}&empresa={{ empresa_filter }}{% endif %}">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link"
+                                href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if empresa_filter %}&empresa={{ empresa_filter }}{% endif %}">
+                                <i class="bi bi-chevron-double-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+
+            {% else %}
+            <div class="empty-state">
+                <i class="bi bi-people"></i>
+                <h4>Nenhum cliente encontrado</h4>
+                <p>
+                    {% if search_query %}
+                    Não foram encontrados clientes para a busca "{{ search_query }}".
+                    {% else %}
+                    Não há clientes cadastrados no sistema.
+                    {% endif %}
+                </p>
+                {% if is_empresa_user %}
+                <a href="{% url 'dividas:cadastrar_cliente' %}" class="btn btn-primary">
+                    <i class="bi bi-person-plus me-1"></i> Cadastrar Primeiro Cliente
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    $(document).ready(function () {
+        // Initialize DataTable
+        $('#clientesTable').DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/pt-BR.json'
+            },
+            pageLength: 25,
+            order: [[0, 'asc']],
+            responsive: true,
+            dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>',
+            columnDefs: [
+                { orderable: false, targets: -1 } // Disable sorting for actions column
+            ]
+        });
+
+        // Initialize tooltips
+        $('[data-bs-toggle="tooltip"]').tooltip();
+
+        // Auto-search on filter change
+        $('select[name="empresa"]').on('change', function () {
+            $(this).closest('form').submit();
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

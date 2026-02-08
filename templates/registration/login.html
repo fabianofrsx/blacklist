@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Blacklist</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-color: #6f42c1;
+            --secondary-color: #0dcaf0;
+            --success-color: #198754;
+            --dark-bg: #121212;
+            --darker-bg: #0a0a0a;
+            --card-bg: #1e1e1e;
+            --text-light: #f8f9fa;
+            --text-muted: #adb5bd;
+        }
+        
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23121212"/><path d="M0,0 L100,100" stroke="%23222" stroke-width="1"/><path d="M100,0 L0,100" stroke="%23222" stroke-width="1"/></svg>');
+        }
+        
+        .login-container {
+            width: 100%;
+            max-width: 450px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .login-card {
+            background-color: var(--card-bg);
+            border: 1px solid #333;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        .login-header {
+            background: linear-gradient(135deg, var(--primary-color), #5a32a3);
+            padding: 30px 20px;
+            text-align: center;
+            color: white;
+        }
+        
+        .login-logo {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+        
+        .login-logo-icon {
+            background: linear-gradient(45deg, white, #e0e0e0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .login-body {
+            padding: 30px;
+        }
+        
+        .form-control {
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            color: var(--text-light);
+            padding: 12px 15px;
+            border-radius: 8px;
+        }
+        
+        .form-control:focus {
+            background-color: #2a2a2a;
+            border-color: var(--primary-color);
+            color: var(--text-light);
+            box-shadow: 0 0 0 0.25rem rgba(111, 66, 193, 0.25);
+        }
+        
+        .input-group-text {
+            background-color: #333;
+            border: 1px solid #444;
+            color: var(--text-muted);
+        }
+        
+        .btn-login {
+            background: linear-gradient(135deg, var(--primary-color), #5a32a3);
+            border: none;
+            color: white;
+            padding: 12px;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        
+        .btn-login:hover {
+            background: linear-gradient(135deg, #5a32a3, var(--primary-color));
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(111, 66, 193, 0.4);
+        }
+        
+        .login-footer {
+            text-align: center;
+            padding: 20px;
+            border-top: 1px solid #333;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        
+        .alert {
+            border-radius: 8px;
+            border: none;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .feature-list li {
+            padding: 8px 0;
+            color: var(--text-muted);
+        }
+        
+        .feature-list i {
+            color: var(--primary-color);
+            margin-right: 10px;
+        }
+        
+        .password-toggle {
+            cursor: pointer;
+            color: var(--text-muted);
+        }
+        
+        .password-toggle:hover {
+            color: var(--primary-color);
+        }
+        
+        .system-info {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .login-card {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        /* Responsive */
+        @media (max-width: 576px) {
+            .login-container {
+                padding: 15px;
+            }
+            
+            .login-body {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <!-- Header -->
+            <div class="login-header">
+                <div class="login-logo">
+                    <i class="bi bi-person-badge login-logo-icon"></i>
+                </div>
+                <h1 class="h4 mb-0">Blacklist</h1>
+                <p class="mb-0 opacity-75">Sistema de Gerenciamento de Dívidas</p>
+            </div>
+            
+            <!-- Body -->
+            <div class="login-body">
+                <!-- Messages -->
+                {% if messages %}
+                <div class="mb-4">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {% if message.tags == 'success' %}
+                            <i class="bi bi-check-circle-fill me-2"></i>
+                        {% elif message.tags == 'error' or message.tags == 'danger' %}
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        {% elif message.tags == 'warning' %}
+                            <i class="bi bi-exclamation-circle-fill me-2"></i>
+                        {% elif message.tags == 'info' %}
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                        {% endif %}
+                        
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <!-- Form Errors -->
+                {% if form.errors %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    Seu nome de usuário e senha não correspondem. Por favor, tente novamente.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endif %}
+                
+                <!-- Login Form -->
+                <form method="post" action="{% url 'login' %}">
+                    {% csrf_token %}
+                    
+                    <!-- Username Field -->
+                    <div class="mb-4">
+                        <label for="id_username" class="form-label">
+                            <i class="bi bi-person-fill me-1"></i> Nome de Usuário
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-person"></i>
+                            </span>
+                            <input type="text" 
+                                   name="username" 
+                                   id="id_username" 
+                                   class="form-control" 
+                                   placeholder="Digite seu usuário"
+                                   required
+                                   autofocus>
+                        </div>
+                        {% if form.username.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ form.username.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Password Field -->
+                    <div class="mb-4">
+                        <label for="id_password" class="form-label">
+                            <i class="bi bi-key-fill me-1"></i> Senha
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-lock"></i>
+                            </span>
+                            <input type="password" 
+                                   name="password" 
+                                   id="id_password" 
+                                   class="form-control" 
+                                   placeholder="Digite sua senha"
+                                   required>
+                            <span class="input-group-text password-toggle" id="togglePassword">
+                                <i class="bi bi-eye" id="toggleIcon"></i>
+                            </span>
+                        </div>
+                        {% if form.password.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ form.password.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Remember Me & Forgot Password -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="rememberMe" name="remember_me">
+                            <label class="form-check-label" for="rememberMe">
+                                Lembrar-me
+                            </label>
+                        </div>
+                        
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <div class="d-grid mb-4">
+                        <button type="submit" class="btn btn-login btn-lg">
+                            <i class="bi bi-box-arrow-in-right me-2"></i> Entrar no Sistema
+                        </button>
+                    </div>
+                    
+                    <!-- Hidden next field -->
+                    <input type="hidden" name="next" value="{{ next }}">
+                </form>
+                
+                <!-- Demo Credentials (for development only) -->
+                {% if debug %}
+                <div class="system-info">
+                    <h6 class="mb-3">
+                        <i class="bi bi-info-circle me-2"></i> Credenciais de Demonstração
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-2">
+                                <small class="text-muted">Usuário Empresa:</small><br>
+                                <code>admin</code>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-2">
+                                <small class="text-muted">Senha:</small><br>
+                                <code>admin123</code>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-muted">Obs: Sistema em modo de desenvolvimento</small>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- System Features -->
+                <div class="mt-4">
+                    <h6 class="mb-3 text-center">
+                        <i class="bi bi-stars me-2"></i> Funcionalidades do Sistema
+                    </h6>
+                    <ul class="feature-list">
+                        <li>
+                            <i class="bi bi-check-circle-fill"></i>
+                            Cadastro de clientes e dívidas
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill"></i>
+                            Consulta por nome e CPF
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill"></i>
+                            Controle de usuários por empresa
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill"></i>
+                            Dashboard com estatísticas
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="login-footer">
+                <div class="mb-2">
+                    <i class="bi bi-shield-check text-primary me-1"></i>
+                    Sistema Seguro
+                </div>
+                <div>
+                    &copy; {% now "Y" %} Blacklist - Todos os direitos reservados
+                    <div class="small mt-1">
+                        v1.0.0 | FRSX Desenvolvimento
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Toggle password visibility
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('id_password');
+            const toggleIcon = document.getElementById('toggleIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.className = 'bi bi-eye-slash';
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.className = 'bi bi-eye';
+            }
+        });
+        
+        // Auto-dismiss alerts after 5 seconds
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+        
+        // Focus on username field if error exists
+        {% if form.errors %}
+        document.getElementById('id_username').focus();
+        {% endif %}
+        
+        // Enter key submits form
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' && !event.target.matches('textarea')) {
+                const form = document.querySelector('form');
+                if (form) {
+                    const submitButton = form.querySelector('button[type="submit"]');
+                    if (submitButton) {
+                        submitButton.click();
+                    }
+                }
+            }
+        });
+        
+        // Remember me functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const rememberMe = localStorage.getItem('rememberMe') === 'true';
+            const username = localStorage.getItem('rememberedUsername');
+            
+            if (rememberMe && username) {
+                document.getElementById('id_username').value = username;
+                document.getElementById('rememberMe').checked = true;
+            }
+            
+            document.getElementById('rememberMe').addEventListener('change', function() {
+                if (this.checked) {
+                    const username = document.getElementById('id_username').value;
+                    localStorage.setItem('rememberMe', 'true');
+                    localStorage.setItem('rememberedUsername', username);
+                } else {
+                    localStorage.removeItem('rememberMe');
+                    localStorage.removeItem('rememberedUsername');
+                }
+            });
+            
+            // Update remembered username when it changes
+            document.getElementById('id_username').addEventListener('input', function() {
+                if (document.getElementById('rememberMe').checked) {
+                    localStorage.setItem('rememberedUsername', this.value);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

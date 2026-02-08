@@ -1,0 +1,165 @@
+{% extends 'dividas/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Baixar Dívida - Blacklist{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-2">
+                        <i class="bi bi-check-circle me-2"></i> Baixar Dívida
+                    </h1>
+                    <p class="text-muted">Registrar pagamento da dívida</p>
+                </div>
+                <a href="{% url 'dividas:detalhes_cliente' divida.cliente.id %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Voltar
+                </a>
+            </div>
+            
+            <!-- Debt Summary Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-info-circle me-2"></i> Resumo da Dívida
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="info-label">Cliente</div>
+                            <div class="info-value h5">{{ divida.cliente.nome_completo }}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="info-label">CPF</div>
+                            <div class="info-value">{{ divida.cliente.cpf }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="info-label">Valor da Dívida</div>
+                            <div class="info-value h4 text-danger">R$ {{ divida.valor_atual|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="info-label">Data de Vencimento</div>
+                            <div class="info-value">{{ divida.data_vencimento|date:"d/m/Y" }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="info-label">Empresa</div>
+                            <div class="info-value">{{ divida.empresa.nome }}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="info-label">Status Atual</div>
+                            <div class="info-value">
+                                <span class="badge badge-status-{{ divida.status|lower }}">
+                                    {{ divida.get_status_display }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Payment Form -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-cash-stack me-2"></i> Registro de Pagamento
+                </div>
+                <div class="card-body">
+                    <form method="post" id="paymentForm">
+                        {% csrf_token %}
+                        
+                        <div class="alert alert-warning">
+                            <div class="d-flex">
+                                <i class="bi bi-exclamation-triangle-fill me-3" style="font-size: 1.5rem;"></i>
+                                <div>
+                                    <h6 class="alert-heading">Atenção!</h6>
+                                    <p class="mb-0">
+                                        Esta ação irá registrar o pagamento da dívida e alterar seu status para "PAGA".
+                                        Esta ação não pode ser desfeita.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="valor_pago" class="form-label">Valor Pago (R$)</label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="valor_pago" 
+                                   name="valor_pago" 
+                                   step="0.01" 
+                                   min="0.01" 
+                                   max="{{ divida.valor_atual }}"
+                                   value="{{ divida.valor_atual|floatformat:2 }}"
+                                   required>
+                            <div class="form-text">
+                                Valor máximo: R$ {{ divida.valor_atual|floatformat:2 }}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="observacoes" class="form-label">Observações</label>
+                            <textarea class="form-control" 
+                                      id="observacoes" 
+                                      name="observacoes" 
+                                      rows="3" 
+                                      placeholder="Informações adicionais sobre o pagamento..."></textarea>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a href="{% url 'dividas:detalhes_cliente' divida.cliente.id %}" 
+                               class="btn btn-secondary me-md-2">
+                                Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle me-1"></i> Confirmar Pagamento
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Form validation
+        $('#paymentForm').on('submit', function(e) {
+            const valorPago = parseFloat($('#valor_pago').val());
+            const valorMaximo = parseFloat('{{ divida.valor_atual }}');
+            
+            if (valorPago > valorMaximo) {
+                e.preventDefault();
+                alert('O valor pago não pode ser maior que o valor da dívida (R$ ' + valorMaximo.toFixed(2) + ').');
+                return false;
+            }
+            
+            if (valorPago <= 0) {
+                e.preventDefault();
+                alert('O valor pago deve ser maior que zero.');
+                return false;
+            }
+            
+            // Confirm action
+            if (!confirm('Tem certeza que deseja registrar o pagamento desta dívida?\n\nValor: R$ ' + valorPago.toFixed(2) + '\n\nEsta ação não pode ser desfeita.')) {
+                e.preventDefault();
+                return false;
+            }
+            
+            return true;
+        });
+        
+        // Auto-focus first field
+        $('#valor_pago').focus().select();
+    });
+</script>
+{% endblock %}
+{% endblock %}

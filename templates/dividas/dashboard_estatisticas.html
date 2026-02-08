@@ -1,0 +1,439 @@
+{% extends 'dividas/base.html' %}
+
+{% block title %}Estatísticas - Blacklist{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-bottom: 30px;
+    }
+    
+    .top-cliente-card {
+        transition: transform 0.3s;
+    }
+    
+    .top-cliente-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .ranking-badge {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 15px;
+    }
+    
+    .ranking-1 {
+        background-color: gold;
+        color: #000;
+    }
+    
+    .ranking-2 {
+        background-color: silver;
+        color: #000;
+    }
+    
+    .ranking-3 {
+        background-color: #cd7f32;
+        color: white;
+    }
+    
+    .ranking-other {
+        background-color: var(--secondary-color);
+        color: white;
+    }
+    
+    .evolucao-item {
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .evolucao-item:last-child {
+        border-bottom: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-2">
+                <i class="bi bi-bar-chart me-2"></i> Estatísticas
+            </h1>
+            <p class="text-muted">
+                Estatísticas e análises da empresa <strong>{{ empresa.nome }}</strong>.
+            </p>
+        </div>
+        <div class="col-auto">
+            <div class="btn-group">
+                <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="bi bi-calendar me-1"></i> Período
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#" data-period="7">Últimos 7 dias</a></li>
+                    <li><a class="dropdown-item" href="#" data-period="30">Últimos 30 dias</a></li>
+                    <li><a class="dropdown-item active" href="#" data-period="365">Último ano</a></li>
+                    <li><a class="dropdown-item" href="#" data-period="all">Todo o período</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card bg-dark">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-exclamation-triangle fs-1 text-danger"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">Dívidas Vencidas</h6>
+                            <h2 class="mb-0">{{ dividas_vencidas }}</h2>
+                            <small class="text-muted">Fora do prazo</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card bg-dark">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-calendar-x fs-1 text-warning"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">A Vencer (7 dias)</h6>
+                            <h2 class="mb-0">{{ dividas_a_vencer }}</h2>
+                            <small class="text-muted">Próximos vencimentos</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card bg-dark">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-cash-coin fs-1 text-primary"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">Valor em Dívidas</h6>
+                            <h2 class="mb-0">R$ {{ valor_total_dividas|floatformat:2 }}</h2>
+                            <small class="text-muted">Total ativo</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card bg-dark">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-arrow-down-up fs-1 text-success"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">Taxa de Recuperação</h6>
+                            <h2 class="mb-0">{{ taxa_recuperacao|floatformat:1 }}%</h2>
+                            <small class="text-muted">Últimos 30 dias</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Charts -->
+    <div class="row mb-4">
+        <!-- Debts by Status -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <i class="bi bi-pie-chart me-2"></i> Dívidas por Status
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Monthly Evolution -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <i class="bi bi-graph-up me-2"></i> Evolução Mensal
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="evolutionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Top Clients -->
+    <div class="row">
+        <div class="col-lg-8 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <i class="bi bi-trophy me-2"></i> Top 5 Clientes com Maiores Dívidas
+                </div>
+                <div class="card-body">
+                    {% if top_clientes %}
+                    <div class="list-group">
+                        {% for cliente in top_clientes %}
+                        <div class="list-group-item border-0 bg-transparent top-cliente-card">
+                            <div class="d-flex align-items-center">
+                                <div class="ranking-badge ranking-{{ forloop.counter }}">
+                                    {{ forloop.counter }}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">{{ cliente.nome_completo }}</h6>
+                                            <small class="text-muted">{{ cliente.cpf }}</small>
+                                        </div>
+                                        <div class="text-end">
+                                            <h5 class="mb-0 text-danger">R$ {{ cliente.total_divida|floatformat:2 }}</h5>
+                                            <small class="text-muted">{{ cliente.num_dividas }} dívida(s)</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="bi bi-people"></i>
+                        <h4>Nenhum dado disponível</h4>
+                        <p>Não há clientes com dívidas ativas.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Monthly Details -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <i class="bi bi-calendar-month me-2"></i> Detalhes Mensais
+                </div>
+                <div class="card-body">
+                    {% if evolucao_mensal %}
+                    <div class="evolucao-list">
+                        {% for item in evolucao_mensal|slice:":6" %}
+                        <div class="evolucao-item">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <strong>{{ item.mes|date:"M/Y" }}</strong>
+                                    <div class="small text-muted">{{ item.total }} dívida(s)</div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="text-success">R$ {{ item.valor|floatformat:2 }}</div>
+                                    <div class="small text-muted">Valor total</div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="bi bi-calendar"></i>
+                        <h4>Sem dados históricos</h4>
+                        <p>Não há registros de evolução mensal.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- Certifique-se que estas bibliotecas estão carregadas no base.html -->
+<script>
+// Prepare data for charts - DECLARE APENAS UMA VEZ
+const statusData = {
+    labels: [
+        {% for item in dividas_por_status %}
+            '{{ item.status_display|escapejs }}',
+        {% empty %}
+            'Sem dados',
+        {% endfor %}
+    ],
+    datasets: [{
+        data: [
+            {% for item in dividas_por_status %}
+                {{ item.total|default:0 }},
+            {% empty %}
+                1,
+            {% endfor %}
+        ],
+        backgroundColor: [
+            '#dc3545', // Ativa - Vermelho
+            '#198754', // Paga - Verde
+            '#ffc107', // Negociação - Amarelo
+            '#0dcaf0', // Cancelada - Azul
+        ],
+        borderWidth: 1
+    }]
+};
+
+const evolutionData = {
+    labels: [
+        {% for item in evolucao_mensal %}
+            '{{ item.mes|date:"M/Y"|escapejs }}',
+        {% empty %}
+            'Sem dados',
+        {% endfor %}
+    ],
+    datasets: [{
+        label: 'Número de Dívidas',
+        data: [
+            {% for item in evolucao_mensal %}
+                {{ item.total|default:0 }},
+            {% empty %}
+                0,
+            {% endfor %}
+        ],
+        backgroundColor: 'rgba(111, 66, 193, 0.2)',
+        borderColor: 'rgba(111, 66, 193, 1)',
+        borderWidth: 2,
+        tension: 0.4
+    }]
+};
+
+// Aguarde o DOM estar completamente carregado
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM carregado, inicializando gráficos...');
+    
+    // Initialize Status Chart
+    const statusCanvas = document.getElementById('statusChart');
+    if (statusCanvas) {
+        try {
+            const statusCtx = statusCanvas.getContext('2d');
+            new Chart(statusCtx, {
+                type: 'doughnut',
+                data: statusData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#f8f9fa',
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += context.raw + ' dívida(s)';
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            console.log('Gráfico de status inicializado com sucesso');
+        } catch (error) {
+            console.error('Erro ao inicializar gráfico de status:', error);
+        }
+    } else {
+        console.error('Elemento statusChart não encontrado');
+    }
+    
+    // Initialize Evolution Chart
+    const evolutionCanvas = document.getElementById('evolutionChart');
+    if (evolutionCanvas) {
+        try {
+            const evolutionCtx = evolutionCanvas.getContext('2d');
+            new Chart(evolutionCtx, {
+                type: 'line',
+                data: evolutionData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#f8f9fa'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#f8f9fa'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#f8f9fa'
+                            }
+                        }
+                    }
+                }
+            });
+            console.log('Gráfico de evolução inicializado com sucesso');
+        } catch (error) {
+            console.error('Erro ao inicializar gráfico de evolução:', error);
+        }
+    } else {
+        console.error('Elemento evolutionChart não encontrado');
+    }
+    
+    // Period filter - use JavaScript puro se jQuery não estiver disponível
+    const periodLinks = document.querySelectorAll('[data-period]');
+    periodLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Update active state
+            periodLinks.forEach(item => {
+                item.parentElement.classList.remove('active');
+            });
+            this.parentElement.classList.add('active');
+            
+            const period = this.getAttribute('data-period');
+            alert('Filtrando para os últimos ' + (period === 'all' ? 'todo o período' : period + ' dias') + '...\n\nEsta funcionalidade requer implementação no backend.');
+        });
+    });
+});
+</script>
+{% endblock %}
